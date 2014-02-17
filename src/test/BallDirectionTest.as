@@ -22,14 +22,9 @@ package test {
 
 		public static var LAUNCH_DIRECTION:String;
 		
-		private const WALL_MOD:String = "wallMod";
-		private const BLACKHOLE_MOD:String = "blackHoleMod";
-		private const WALL_ROTATION_INCREMENT:int = 12;
-		
 		private const DIRECTIONS:Array = ["left", "right", "top", "bottom"];
 		private var directionIdx:int = 0;
 		
-		private var itemsMod:String = WALL_MOD;
 
 		private var gravity:int = 5;
 		private const LAUNCH_INTERVAL:uint = 500;
@@ -38,9 +33,7 @@ package test {
 		private var ballContainer:Sprite;
 		private var itemsContainer:Sprite;
 		private var blackHoleVect:Vector.<BlackHoleTest> = new Vector.<BlackHoleTest>();
-		private var wallVect:Vector.<WallTest> = new Vector.<WallTest>();
 		private var tmpBlackHole:BlackHoleTest;
-		private var tmpWall:WallTest;
 		
 		private var gravityTf:TextField;
 		private var directionTf:TextField;
@@ -79,90 +72,41 @@ package test {
 		}
 
 		private function addItem(event:MouseEvent):void {
-			switch(itemsMod){
-				case WALL_MOD:
-					addWall();
-					break;
-				case BLACKHOLE_MOD:
-					addBlackHole();
-					break;
-			}
+			addBlackHole();
 		}
 
 		private function rollOverBlackHole(event:MouseEvent):void {
-			if(itemsMod == BLACKHOLE_MOD){
-				removingAnother = true;
-				deleteTempBlackHole();
-			}
+			removingAnother = true;
+			deleteTempBlackHole();
 		}
 
 		private function rollOutBlackHole(event:MouseEvent):void {
-			if(itemsMod == BLACKHOLE_MOD){
-				removingAnother = false;
-				createTempBackHole();
-			}
+			removingAnother = false;
+			createTempBackHole();
 		}
 		
 		private function removeBlackHole(event:MouseEvent):void{
-			if(itemsMod == BLACKHOLE_MOD){
-				var blackHole:BlackHoleTest = event.target as BlackHoleTest;
-				blackHoleVect.splice(blackHoleVect.indexOf(blackHole), 1);
-				itemsContainer.removeChild(blackHole);
-			}
-		}
-
-		private function rollOverWall(event:MouseEvent):void {
-			if(itemsMod == WALL_MOD){
-				removingAnother = true;
-				deleteTempWall();
-			}
-		}
-
-		private function rollOutWall(event:MouseEvent):void {
-			if(itemsMod == WALL_MOD){
-				removingAnother = false;
-				createTempWall();
-			}
-		}
-		
-		private function removeWall(event:MouseEvent):void{
-			if(itemsMod == WALL_MOD){
-				var wall:WallTest = event.target as WallTest;
-				wallVect.splice(wallVect.indexOf(wall), 1);
-				itemsContainer.removeChild(wall);
-			}
+			var blackHole:BlackHoleTest = event.target as BlackHoleTest;
+			blackHoleVect.splice(blackHoleVect.indexOf(blackHole), 1);
+			itemsContainer.removeChild(blackHole);
 		}
 
 		private function onEnterFrame(event:Event):void {
 			if(tmpBlackHole != null){
 				tmpBlackHole.x = stage.mouseX;
 				tmpBlackHole.y = stage.mouseY;
-			} else if(tmpWall != null){
-				tmpWall.x = stage.mouseX;
-				tmpWall.y = stage.mouseY;
 			}
 			
-			checkWallCollisions();
 			checkBlackHoleCollisions();
 		}
 
 		private function onKeyboardDown(event:KeyboardEvent):void {
 			if(event.keyCode == Keyboard.LEFT){
-				if(itemsMod == WALL_MOD){
-					if(tmpWall != null)
-						tmpWall.rotation -= WALL_ROTATION_INCREMENT;
-				} else {
-					gravity --;
-					updateGravityTF();
-				}
+				gravity --;
+				updateGravityTF();
 			} else if(event.keyCode == Keyboard.RIGHT){
-				if(itemsMod == WALL_MOD){
-					if(tmpWall != null)
-						tmpWall.rotation += WALL_ROTATION_INCREMENT;
-				} else {
-					gravity ++;
-					updateGravityTF();
-				}
+				gravity ++;
+				updateGravityTF();
 			} else if(event.keyCode == Keyboard.UP){
 				directionIdx ++;
 				if(directionIdx == DIRECTIONS.length)
@@ -175,15 +119,7 @@ package test {
 				setDirection();
 			} else if(event.keyCode == Keyboard.SPACE){
 				removingAnother = false;
-				if(itemsMod == WALL_MOD){
-					itemsMod = BLACKHOLE_MOD;
-					deleteTempWall();
-					createTempBackHole();
-				} else {
-					itemsMod = WALL_MOD;
-					deleteTempBlackHole();
-					createTempWall();
-				}
+				createTempBackHole();
 				
 			} else if(event.keyCode == Keyboard.SHIFT){
 				if(tmpBlackHole != null){
@@ -230,14 +166,7 @@ package test {
 			addChild(directionTf);
 			setDirection();
 			
-			switch(itemsMod){
-				case WALL_MOD:
-					createTempWall();
-					break;
-				case BLACKHOLE_MOD:
-					createTempBackHole();
-					break;
-			}
+			createTempBackHole();
 			
 			addEventListener(MouseEvent.CLICK, addItem);
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
@@ -278,42 +207,6 @@ package test {
 				tmpBlackHole = null;
 			}
 		}
-		
-		private function createTempWall():void{
-			if(tmpWall == null){
-				tmpWall = new WallTest();
-				tmpWall.x = stage.mouseX;
-				tmpWall.y = stage.mouseY;
-				tmpWall.mouseChildren = false;
-				tmpWall.mouseEnabled = false;
-				itemsContainer.addChild(tmpWall);
-			}
-		}
-		
-		private function deleteTempWall():void{
-			if(tmpWall != null){
-				if(itemsContainer.contains(tmpWall))
-					itemsContainer.removeChild(tmpWall);
-				tmpWall = null;
-			}
-		}
-
-		private function addWall():void {
-			if(!removingAnother){
-				if(tmpWall == null){
-					createTempWall();
-				}
-				tmpWall.validate();
-				tmpWall.mouseEnabled = true;
-				tmpWall.mouseChildren = false;
-				wallVect.push(tmpWall);
-				
-				tmpWall.addEventListener(MouseEvent.CLICK, removeWall);
-				tmpWall.addEventListener(MouseEvent.ROLL_OVER, rollOverWall);
-				tmpWall.addEventListener(MouseEvent.ROLL_OUT, rollOutWall);
-				tmpWall = null;
-			}
-		}
 
 		private function addBlackHole():void {
 			if(!removingAnother){
@@ -330,49 +223,6 @@ package test {
 				tmpBlackHole.addEventListener(MouseEvent.ROLL_OVER, rollOverBlackHole);
 				tmpBlackHole.addEventListener(MouseEvent.ROLL_OUT, rollOutBlackHole);
 				tmpBlackHole = null;
-			}
-		}
-
-		private function checkWallCollisions():void {
-			for each (var ball:BallTest in ballsVect) {
-				for each (var wall:WallTest in wallVect) {
-					if(ball.hitTestObject(wall)){
-						checkCloseWallCollision(ball, wall);
-					}
-				}
-			}
-		}
-
-		private function checkCloseWallCollision(ball:BallTest, wall:WallTest):void {
-			var pBallPoint:Point = new Point(ball.x, ball.y);
-			var oLineDist:Object = pointToLineDistance(wall.pBorderA, wall.pBorderB, pBallPoint, true);
-			if (oLineDist.dist != -1) {
-				if (oLineDist.dist < ((ball.width / 2) + (wall.center.height / 2))) {
-					bounceFromWallCenter (ball, wall, oLineDist.closest);
-					return;
-				}
-			}
-			
-			var nDistX:Number;
-			var nDistY:Number;
-			var nDistance:Number;
-			
-			nDistX = Math.abs ( ball.x - wall.pBorderA.x );
-			nDistY = Math.abs ( ball.y - wall.pBorderA.y );
-			nDistance = Math.sqrt ( nDistX * nDistX + nDistY * nDistY );
-			if ( nDistance < ((ball.width / 2) + (wall.borderA.width / 2)))
-			{
-				bounceFromWallBorder (ball, wall.pBorderA, wall.borderA);
-				return;
-			}
-			
-			nDistX = Math.abs ( ball.x - wall.pBorderB.x );
-			nDistY = Math.abs ( ball.y - wall.pBorderB.y );
-			nDistance = Math.sqrt ( nDistX * nDistX + nDistY * nDistY );
-			if ( nDistance < ((ball.width/2) + (wall.borderB.width/2)))
-			{
-				bounceFromWallBorder (ball, wall.pBorderB, wall.borderB);
-				return;
 			}
 		}
 		
@@ -402,77 +252,6 @@ package test {
 				obj.dist = dist;
 			}
 			return obj;
-		}
-		
-		private function bounceFromWallBorder(ball:BallTest, pBorder:Point, mcBorder:Sprite):void 
-		{
-			var nX1:Number = ball.x;
-			var nY1:Number = ball.y;
-			var nDistX:Number = pBorder.x - nX1;
-			var nDistY:Number = pBorder.y - nY1;
-			
-			var nDistance:Number = Math.sqrt ( nDistX * nDistX + nDistY * nDistY );
-			var nRadiusA:Number = ball.width/2;
-			var nRadiusB:Number = mcBorder.width/2;
-			
-			var nNormalX:Number = nDistX/nDistance;
-			var nNormalY:Number = nDistY/nDistance;
-			
-			var nMidpointX:Number = ( nX1 + pBorder.x )/2;
-			var nMidpointY:Number = ( nY1 + pBorder.y )/2;
-			
-			ball.x = nMidpointX - nNormalX * nRadiusA;
-			ball.y = nMidpointY - nNormalY * nRadiusA;
-			
-			var nVector:Number = ( ( ball.speedX - ((ball.speedX)*(-1)) ) * nNormalX )+ ( ( ball.speedY - ((ball.speedY)*(-1)) ) * nNormalY );
-			var nVelX:Number = nVector * nNormalX;
-			var nVelY:Number = nVector * nNormalY;
-			
-			var sx:Number = ball.speedX - nVelX;
-			var sy:Number = ball.speedY - nVelY;
-			ball.setVector(sx, sy);
-		}
-		
-		private function bounceFromWallCenter(ball:BallTest, wall:WallTest, impactPoint:Point):void 
-		{
-			// get the position of ball in relation to wall
-			var x:Number = ball.x - impactPoint.x;
-			var y:Number = ball.y - impactPoint.y;
-
-			// get angle in radians of wall
-			var angle:Number = wall.rotation * Math.PI / 180;
-			//trace(angle);
-
-			// rotate the scene to make it as if wall was lying flat
-			// -angle is the amount we need to rotate it.
-			// first rotate ball's position:
-			var x1:Number = Math.cos(angle) * x + Math.sin(angle) * y;
-			var y1:Number = Math.cos(angle) * y - Math.sin(angle) * x;
-
-			// then the velocities
-			var vx1:Number = Math.cos(angle) * ball.speedX + Math.sin(angle) * ball.speedY;
-			var vy1:Number = Math.cos(angle) * ball.speedY - Math.sin(angle) * ball.speedX;
-			
-			var thickness:Number = (ball.width / 2) + (wall.center.height / 2);
-			var side:String = "none";
-			if (y1 > 0 - thickness && y1 < 0) {
-				side = "top";
-				y1 = 0 - thickness;
-			} else if (y1 < thickness && y1 > 0) {
-				side = "bottom";
-				y1 = thickness;
-			}
-			
-			if (side != "none") {
-				vy1 *= -1;
-				x = Math.cos(angle) * x1 - Math.sin(angle) * y1;
-				y = Math.cos(angle) * y1 + Math.sin(angle) * x1;
-				var sx:Number = Math.cos(angle) * vx1 - Math.sin(angle) * vy1;
-				var sy:Number = Math.cos(angle) * vy1 + Math.sin(angle) * vx1;
-				ball.setVector(sx, sy);
-				ball.x = impactPoint.x + x;
-				ball.y = impactPoint.y + y;
-			}
 		}
 
 		private function checkBlackHoleCollisions():void {
